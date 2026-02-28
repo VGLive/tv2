@@ -23,7 +23,7 @@
         
         /* Filter Group for Mobile Inline */
         .filter-group { display: flex; gap: 10px; flex: 1; min-width: 200px; }
-        .filter-group select { flex: 1; min-width: 0; } /* min-width: 0 allows them to shrink on tiny screens */
+        .filter-group select { flex: 1; min-width: 0; }
 
         .btn { padding: 8px 12px; background: var(--accent); color: #fff; border-radius: 4px; font-weight: bold; cursor: pointer; border: none; font-size: 13px; white-space: nowrap; text-decoration: none; transition: 0.2s; }
         .btn:hover { opacity: 0.9; }
@@ -73,18 +73,31 @@
             try {
                 const res = await fetch(API_URL);
                 if (res.ok) {
-                    activeDb = await res.json();
+                    const data = await res.json();
+                    
+                    // SMART PARSER: Handle direct array or nested array formats
+                    activeDb = Array.isArray(data) ? data : (data.channels || data.data || data.result || []);
+                    
+                    if (activeDb.length === 0) {
+                        throw new Error("API connected, but returned no channels or unrecognized format.");
+                    }
+
                     // Sort alphabetically
                     activeDb.sort((a, b) => (a.channel_name || "").localeCompare(b.channel_name || ""));
                     
                     updateDropdowns("", ""); 
                     applyFilters();
                 } else {
-                    throw new Error("Server response not OK");
+                    throw new Error("Server returned status: " + res.status);
                 }
             } catch (err) {
-                grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#ef4444; margin-top:50px;">Failed to Load Channels.<br>Check Internet Connection.</div>`;
-                console.error(err);
+                // Better error output to debug CORS or Format issues
+                grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#ef4444; margin-top:50px;">
+                    Failed to Load Channels.<br><br>
+                    <b>Error:</b> ${err.message}<br>
+                    <small style="color:#888;">If it says "Failed to fetch", the API has blocked CORS. Press F12 to check console.</small>
+                </div>`;
+                console.error("Fetch Error:", err);
             }
         }
 
