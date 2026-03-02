@@ -68,7 +68,7 @@
     }
 
     .main-logo {
-        height: 40px; /* Fixed height for inline alignment */
+        height: 40px; 
         width: auto;
         object-fit: contain;
         filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
@@ -77,13 +77,13 @@
     .search-container {
         flex: 1;
         display: flex;
-        justify-content: flex-end; /* Aligns search bar to the right */
+        justify-content: flex-end; 
     }
 
     #searchInput {
         padding: 12px 20px;
         width: 100%;
-        max-width: 400px; /* Prevents it from getting too wide on PC */
+        max-width: 400px; 
         border-radius: 30px;
         border: 1px solid var(--card-border);
         background: var(--card-bg);
@@ -188,14 +188,14 @@
             margin-bottom: 15px;
         }
         .main-logo {
-            height: 28px; /* Scale logo down slightly for mobile */
+            height: 28px; 
         }
         #searchInput {
             padding: 10px 16px;
             font-size: 14px;
         }
         .grid-container {
-            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); /* Fit more cards on small screens */
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); 
             gap: 12px;
         }
     }
@@ -320,6 +320,28 @@
         );
         renderGrid(filtered);
     });
+
+    // Auto-rotate to Landscape on Mobile when Fullscreen is activated
+    function handleFullscreenChange() {
+        const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+        
+        if (isFullscreen) {
+            if (screen.orientation && screen.orientation.lock) {
+                // Ignore errors silently for devices that don't support orientation lock (like iOS)
+                screen.orientation.lock('landscape').catch(() => {});
+            }
+        } else {
+            if (screen.orientation && screen.orientation.unlock) {
+                screen.orientation.unlock();
+            }
+        }
+    }
+
+    // Listen to standard and vendor-prefixed fullscreen events
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
 
     // Start App
     document.addEventListener("DOMContentLoaded", init);
