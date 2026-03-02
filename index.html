@@ -15,15 +15,9 @@
         .nav { padding: 15px; background: #111; border-bottom: 2px solid var(--accent); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
         .nav-logo { height: 35px; margin-right: 10px; object-fit: contain; }
         
-        /* Inputs & Selects */
-        input[type="text"], select { padding: 8px; border-radius: 4px; border: 1px solid #444; background: #000; color: #fff; outline: none; font-size: 13px; }
-        input[type="text"] { flex: 1; min-width: 150px; }
-        select { cursor: pointer; }
-        select:focus, input:focus { border-color: var(--accent); }
-        
-        /* Filter Group for Mobile Inline */
-        .filter-group { display: flex; gap: 10px; flex: 1; min-width: 200px; }
-        .filter-group select { flex: 1; min-width: 0; } /* min-width: 0 allows them to shrink on tiny screens */
+        /* Inputs */
+        input[type="text"] { padding: 8px; border-radius: 4px; border: 1px solid #444; background: #000; color: #fff; outline: none; font-size: 13px; flex: 1; min-width: 150px; }
+        input[type="text"]:focus { border-color: var(--accent); }
 
         .btn { padding: 8px 12px; background: var(--accent); color: #fff; border-radius: 4px; font-weight: bold; cursor: pointer; border: none; font-size: 13px; white-space: nowrap; text-decoration: none; transition: 0.2s; }
         .btn:hover { opacity: 0.9; }
@@ -44,15 +38,6 @@
         <img src="https://raw.githubusercontent.com/VGLiveTV/vgtv/refs/heads/main/logo.png" alt="VG TV Logo" class="nav-logo">
         
         <input type="text" id="search" placeholder="Search Channel...">
-        
-        <div class="filter-group">
-            <select id="catFilter">
-                <option value="">All Categories</option>
-            </select>
-            <select id="langFilter">
-                <option value="">All Languages</option>
-            </select>
-        </div>
     </div>
 
     <div id="grid" class="grid">
@@ -90,7 +75,6 @@
                     // Sort alphabetically
                     activeDb.sort((a, b) => (a.channel_name || "").localeCompare(b.channel_name || ""));
                     
-                    updateDropdowns("", ""); 
                     applyFilters();
                 } else {
                     throw new Error("Server response not OK");
@@ -103,78 +87,24 @@
 
         // 2. Filter Logic
         const searchInput = document.getElementById('search');
-        const catFilter = document.getElementById('catFilter');
-        const langFilter = document.getElementById('langFilter');
 
         function applyFilters() {
             const t = searchInput.value.toLowerCase();
-            const selectedCat = catFilter.value;
-            const selectedLang = langFilter.value;
 
             const filtered = activeDb.filter(c => {
                 const name = (c.channel_name || "").toLowerCase();
                 const genre = (c.channel_genre || "Others"); 
                 const lang = (c.channel_language || c.language || c.lang || "Others");
 
-                const matchesSearch = name.includes(t) || genre.toLowerCase().includes(t) || lang.toLowerCase().includes(t);
-                const matchesCat = selectedCat === "" || genre === selectedCat;
-                const matchesLang = selectedLang === "" || lang === selectedLang;
-
-                return matchesSearch && matchesCat && matchesLang;
+                return name.includes(t) || genre.toLowerCase().includes(t) || lang.toLowerCase().includes(t);
             });
 
             render(filtered);
-            updateDropdowns(selectedCat, selectedLang); 
         }
 
         searchInput.oninput = applyFilters;
-        catFilter.onchange = applyFilters;
-        langFilter.onchange = applyFilters;
 
-        // 3. Smart Dropdowns 
-        function updateDropdowns(currentCat, currentLang) {
-            // CATEGORY COUNTS
-            const catBaseList = activeDb.filter(c => {
-                const lang = (c.channel_language || c.language || c.lang || "Others");
-                return currentLang ? lang === currentLang : true; 
-            });
-
-            const catCounts = {};
-            catBaseList.forEach(c => {
-                const cat = c.channel_genre || "Others";
-                catCounts[cat] = (catCounts[cat] || 0) + 1;
-            });
-            const categories = Object.keys(catCounts).sort();
-            
-            let catHTML = `<option value="">All Categories (${catBaseList.length})</option>`;
-            categories.forEach(cat => {
-                 const isSelected = cat === currentCat ? 'selected' : '';
-                 catHTML += `<option value="${cat}" ${isSelected}>${cat} (${catCounts[cat]})</option>`;
-            });
-            catFilter.innerHTML = catHTML;
-
-            // LANGUAGE COUNTS
-            const langBaseList = activeDb.filter(c => {
-                const cat = c.channel_genre || "Others";
-                return currentCat ? cat === currentCat : true;
-            });
-
-            const langCounts = {};
-            langBaseList.forEach(c => {
-                const lang = (c.channel_language || c.language || c.lang || "Others");
-                langCounts[lang] = (langCounts[lang] || 0) + 1;
-            });
-            const languages = Object.keys(langCounts).sort();
-
-            let langHTML = `<option value="">All Languages (${langBaseList.length})</option>`;
-            languages.forEach(lang => {
-                const isSelected = lang === currentLang ? 'selected' : '';
-                langHTML += `<option value="${lang}" ${isSelected}>${lang} (${langCounts[lang]})</option>`;
-            });
-            langFilter.innerHTML = langHTML;
-        }
-
-        // 4. Render Grid
+        // 3. Render Grid
         function render(data) {
             const g = document.getElementById('grid');
             if(data.length === 0) {
@@ -193,7 +123,7 @@
             `}).join('');
         }
 
-        // 5. Generate & Open Player
+        // 4. Generate & Open Player
         function playInNewTab(c) {
             const name = c.channel_name || "VG Player";
             const url = c.channel_url || "";
