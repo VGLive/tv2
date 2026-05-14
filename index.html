@@ -91,7 +91,7 @@
         let channels = [];
 
         try {
-            const res = await fetch('https://raw.githubusercontent.com/VGLive/vgtv/refs/heads/main/channels');
+            const res = await fetch('https://pastefy.app/ZH3tseJk/raw');
             channels = (await res.json()).map(c => {
                 c._cat = (c.category || c.group || c.group_title || c['group-title'] || c.Category || '').trim();
                 return c;
